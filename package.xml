@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>reach_rs_driver</name>
+  <version>0.0.1</version>
+  <description>A ROS driver for the Emlid Reach RS GNSS RTK receiver. 
+  It is based on the nmea_navsat_driver package.</description>
+
+  <maintainer email="jacob.seibert@enway.ai">Jacob Seibert</maintainer>
+  <license>BSD</license>
+  <url type="www.enway.ai">www.enway.ai</url>
+
+  <author email="jacob.seibert@enway.ai">Jacob Seibert</author>
+  <author email="eric@ericperko.com">Eric Perko</author>
+  <author>Steven Martin</author>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <depend>rospy</depend>
+  <depend>sensor_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>diagnostic_msgs</depend>
+  <depend>diagnostic_updater</depend>
+
+</package>
