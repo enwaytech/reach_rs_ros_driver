@@ -49,12 +49,14 @@ FixStatus = {-1 : 'No Fix',
 
 class ReachRsDriver(object):
     def __init__(self):
-        self.host_ = rospy.get_param('~reach_rs_host_or_ip', 'reach.local')
-        self.port_ = rospy.get_param('~reach_rs_port')
+        host = rospy.get_param('~reach_rs_host_or_ip', 'reach.local')
+        port = rospy.get_param('~reach_rs_port')
+        self.address_ = (host, port)
+
+        self.socket_ = None
+
         self.frameId_ = rospy.get_param('~reach_rs_frame_id', 'reach_rs')
         self.fixTimeout_ = rospy.get_param('~fix_timeout', 0.5)
-        
-        self.socket_ = socket.socket()
         
         self.driver_ = enway_reach_rs_driver.driver.RosNMEADriver()
         
@@ -62,17 +64,16 @@ class ReachRsDriver(object):
         self.diagnostics_.setHardwareID('Emlid Reach RS')
         self.diagnostics_.add('Receiver Status', self.addDiagnotics)
         
-        self.connectionStatus_ = 'Not connected'
+        self.connected_ = False
+        self.connection_status_ = 'not connected'
         self.lastFix_ = None
         
     def __del__(self):
-        self.socket_.close()
+        if self.socket_:
+            self.socket_.close()
         
     def update(self):
         self.diagnostics_.update()
-        
-    def isConnected(self):
-        return self.connectionStatus_ == 'Connected'
     
     def receivesFixes(self):
         if not self.lastFix_:
@@ -82,49 +83,51 @@ class ReachRsDriver(object):
         return duration.to_sec() < self.fixTimeout_
         
     def addDiagnotics(self, stat):
-        if self.isConnected() and self.receivesFixes():
+        if self.connected_ and self.receivesFixes():
             stat.summary(diagnostic_msgs.msg.DiagnosticStatus.OK, 'Reach RS driver is connected and has a fix')
-        elif self.isConnected():
+        elif self.connected_:
             stat.summary(diagnostic_msgs.msg.DiagnosticStatus.WARN, 'Reach RS driver is connected but has no fix')
         else:
             stat.summary(diagnostic_msgs.msg.DiagnosticStatus.ERROR, 'Reach RS driver has a connection problem')
             
-        stat.add("Connection status", self.connectionStatus_)
+        stat.add('Connected', self.connected_)
+        stat.add('Connection status', self.connection_status_)
         
         if self.lastFix_:
             stat.add("Fix status", FixStatus[self.lastFix_.status.status])
             stat.add("Seconds since last fix", (rospy.Time.now()-self.lastFix_.header.stamp).to_sec())
         else:
             stat.add("Fix status", FixStatus[NavSatStatus.STATUS_NO_FIX])
-            stat.add("Seconds since last fix", FixStatus[NavSatStatus.STATUS_NO_FIX])
+            stat.add("Seconds since last fix", '-')
         
     def connectToDevice(self):
-        rospy.loginfo('Connecting to {0}:{1}...'.format(self.host_, self.port_))
-        
-        self.socket_.settimeout(0.2)
+        rospy.loginfo('Connecting to {0}:{1}...'.format(*self.address_))
         
         while not rospy.is_shutdown():
             self.update()
             
+            if self.socket_:
+                self.socket_.close()
+                self.socket_ = None
+
+            self.connected_ = False
+            self.connection_status_ = 'not connected'
+
+            self.socket_ = socket.socket()
+
             try:
-                self.socket_.connect((self.host_, self.port_))
-                self.connectionStatus_ = 'Connected'
+                self.socket_.settimeout(5)
+                self.socket_.connect(self.address_)
+                self.connected_ = True
+                self.connection_status_ = 'connected'
                 rospy.loginfo('Successfully connected to device!')
                 return
             except socket.timeout:
-                self.connectionStatus_ = 'Connect timeout. Retrying...'
+                self.connection_status_ = 'connect timeout'
             except socket.error,  msg:
-                self.connectionStatus_ = 'Connect error: {0}. Retrying...'.format(msg)
+                self.connection_status_ = 'connect error ({0})'.format(msg)
             
         exit()
-        
-    def reconnectToDevice(self):
-        rospy.logwarn('Lost connection. Trying to reconnect...')
-        
-        self.connectionStatus_ = 'Not connected'
-        self.socket_.close()
-        self.socket_ = socket.socket()
-        self.connectToDevice()
         
     def run(self):
         self.connectToDevice()
@@ -133,14 +136,18 @@ class ReachRsDriver(object):
             self.update()
             
             try:
-                self.socket_.settimeout(0.1)
+                self.socket_.settimeout(self.fixTimeout_)
                 data = self.socket_.recv(1024)
                 
                 if data == '':
-                    self.reconnectToDevice()
+                    rospy.logwarn('Lost connection. Trying to reconnect...')
+                    self.connectToDevice()
                 else:
                     self.parseData(data)
+                    self.connection_status_ = 'receiving NMEA messages'
             except socket.timeout as t:
+                self.connection_status_ = 'no NMEA messages received'
+            except socket.error:
                 pass
         
     def parseData(self, data):
