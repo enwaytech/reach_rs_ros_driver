@@ -51,81 +51,81 @@ class ReachRsDriver(object):
     def __init__(self):
         host = rospy.get_param('~reach_rs_host_or_ip', 'reach.local')
         port = rospy.get_param('~reach_rs_port')
-        self.address_ = (host, port)
+        self.address = (host, port)
 
-        self.socket_ = None
+        self.socket = None
 
-        self.frameId_ = rospy.get_param('~reach_rs_frame_id', 'reach_rs')
-        self.fixTimeout_ = rospy.get_param('~fix_timeout', 0.5)
+        self.frameId = rospy.get_param('~reach_rs_frame_id', 'reach_rs')
+        self.fixTimeout = rospy.get_param('~fix_timeout', 0.5)
         
-        self.driver_ = enway_reach_rs_driver.driver.RosNMEADriver()
+        self.driver = enway_reach_rs_driver.driver.RosNMEADriver()
         
-        self.diagnostics_ = diagnostic_updater.Updater()
-        self.diagnostics_.setHardwareID('Emlid Reach RS')
-        self.diagnostics_.add('Receiver Status', self.addDiagnotics)
+        self.diagnostics = diagnostic_updater.Updater()
+        self.diagnostics.setHardwareID('Emlid Reach RS')
+        self.diagnostics.add('Receiver Status', self.addDiagnotics)
         
-        self.connected_ = False
-        self.connection_status_ = 'not connected'
-        self.lastFix_ = None
+        self.connected = False
+        self.connection_status = 'not connected'
+        self.lastFix = None
         
     def __del__(self):
-        if self.socket_:
-            self.socket_.close()
+        if self.socket:
+            self.socket.close()
         
     def update(self):
-        self.diagnostics_.update()
+        self.diagnostics.update()
     
     def receivesFixes(self):
-        if not self.lastFix_:
+        if not self.lastFix:
             return False
         
-        duration = (rospy.Time.now()-self.lastFix_.header.stamp)
-        return duration.to_sec() < self.fixTimeout_
+        duration = (rospy.Time.now() - self.lastFix.header.stamp)
+        return duration.to_sec() < self.fixTimeout
         
     def addDiagnotics(self, stat):
-        if self.connected_ and self.receivesFixes():
+        if self.connected and self.receivesFixes():
             stat.summary(diagnostic_msgs.msg.DiagnosticStatus.OK, 'Reach RS driver is connected and has a fix')
-        elif self.connected_:
+        elif self.connected:
             stat.summary(diagnostic_msgs.msg.DiagnosticStatus.WARN, 'Reach RS driver is connected but has no fix')
         else:
             stat.summary(diagnostic_msgs.msg.DiagnosticStatus.ERROR, 'Reach RS driver has a connection problem')
             
-        stat.add('Connected', self.connected_)
-        stat.add('Connection status', self.connection_status_)
+        stat.add('Connected', self.connected)
+        stat.add('Connection status', self.connection_status)
         
-        if self.lastFix_:
-            stat.add("Fix status", FixStatus[self.lastFix_.status.status])
-            stat.add("Seconds since last fix", (rospy.Time.now()-self.lastFix_.header.stamp).to_sec())
+        if self.lastFix:
+            stat.add("Fix status", FixStatus[self.lastFix.status.status])
+            stat.add("Seconds since last fix", (rospy.Time.now() - self.lastFix.header.stamp).to_sec())
         else:
             stat.add("Fix status", FixStatus[NavSatStatus.STATUS_NO_FIX])
             stat.add("Seconds since last fix", '-')
         
     def connectToDevice(self):
-        rospy.loginfo('Connecting to {0}:{1}...'.format(*self.address_))
+        rospy.loginfo('Connecting to {0}:{1}...'.format(*self.address))
         
         while not rospy.is_shutdown():
             self.update()
             
-            if self.socket_:
-                self.socket_.close()
-                self.socket_ = None
+            if self.socket:
+                self.socket.close()
+                self.socket = None
 
-            self.connected_ = False
-            self.connection_status_ = 'not connected'
+            self.connected = False
+            self.connection_status = 'not connected'
 
-            self.socket_ = socket.socket()
+            self.socket = socket.socket()
 
             try:
-                self.socket_.settimeout(5)
-                self.socket_.connect(self.address_)
-                self.connected_ = True
-                self.connection_status_ = 'connected'
+                self.socket.settimeout(5)
+                self.socket.connect(self.address)
+                self.connected = True
+                self.connection_status = 'connected'
                 rospy.loginfo('Successfully connected to device!')
                 return
             except socket.timeout:
-                self.connection_status_ = 'connect timeout'
+                self.connection_status = 'connect timeout'
             except socket.error,  msg:
-                self.connection_status_ = 'connect error ({0})'.format(msg)
+                self.connection_status = 'connect error ({0})'.format(msg)
             
         exit()
         
@@ -136,17 +136,17 @@ class ReachRsDriver(object):
             self.update()
             
             try:
-                self.socket_.settimeout(self.fixTimeout_)
-                data = self.socket_.recv(1024)
+                self.socket.settimeout(self.fixTimeout)
+                data = self.socket.recv(1024)
                 
                 if data == '':
                     rospy.logwarn('Lost connection. Trying to reconnect...')
                     self.connectToDevice()
                 else:
                     self.parseData(data)
-                    self.connection_status_ = 'receiving NMEA messages'
+                    self.connection_status = 'receiving NMEA messages'
             except socket.timeout as t:
-                self.connection_status_ = 'no NMEA messages received'
+                self.connection_status = 'no NMEA messages received'
             except socket.error:
                 pass
         
@@ -156,9 +156,9 @@ class ReachRsDriver(object):
         for sentence in data:
             if 'GPGGA' in sentence or 'RMC' in sentence:
                 try:
-                    fix = self.driver_.add_sentence(sentence, self.frameId_)
+                    fix = self.driver.add_sentence(sentence, self.frameId)
                     
                     if fix:
-                        self.lastFix_ = fix
+                        self.lastFix = fix
                 except ValueError as e:
                     rospy.logwarn("Value error, likely due to missing fields in the NMEA message. Error was: %s. Please report this issue at github.com/ros-drivers/nmea_navsat_driver, including a bag file with the NMEA sentences that caused it." % e)
