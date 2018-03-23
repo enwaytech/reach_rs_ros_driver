@@ -50,7 +50,7 @@ class RosNMEADriver(object):
 
         self.time_ref_source = rospy.get_param('~time_ref_source', None)
         self.use_RMC = rospy.get_param('~useRMC', False)
-        self.covarianceMatrix = rospy.get_param('~covariance_matrix', None)
+        self.covariance_matrix = rospy.get_param('~covariance_matrix', None)
 
     # Returns the fix if we successfully did something with the passed in
     # nmea_string
@@ -108,9 +108,9 @@ class RosNMEADriver(object):
                 longitude = -longitude
             current_fix.longitude = longitude
 
-            if self.covarianceMatrix and isinstance(self.covarianceMatrix, list) and len(self.covarianceMatrix) == 9:
+            if self.covariance_matrix and isinstance(self.covariance_matrix, list) and len(self.covariance_matrix) == 9:
                 for i in range(9):
-                    current_fix.position_covariance[i] = self.covarianceMatrix[i]
+                    current_fix.position_covariance[i] = self.covariance_matrix[i]
                 current_fix.position_covariance_type = \
                     NavSatFix.COVARIANCE_TYPE_KNOWN
             else:
