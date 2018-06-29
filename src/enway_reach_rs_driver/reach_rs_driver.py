@@ -154,7 +154,7 @@ class ReachRsDriver(object):
         data = data.strip().split()
         
         for sentence in data:
-            if 'GPGGA' in sentence or 'RMC' in sentence:
+            if 'GGA' in sentence or 'RMC' in sentence:
                 try:
                     fix = self.driver.add_sentence(sentence, self.frame_id)
                     
