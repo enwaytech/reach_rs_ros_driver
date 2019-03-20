@@ -1,0 +1,13 @@
+Source: ros-melodic-reach-rs-driver
+Section: misc
+Priority: extra
+Maintainer: Jacob Seibert <jacob.seibert@enway.ai>
+Build-Depends: debhelper (>= 9.0.0), ros-melodic-catkin, ros-melodic-diagnostic-msgs, ros-melodic-diagnostic-updater, ros-melodic-geometry-msgs, ros-melodic-rospy, ros-melodic-sensor-msgs
+Homepage: 
+Standards-Version: 3.9.2
+
+Package: ros-melodic-reach-rs-driver
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, ros-melodic-diagnostic-msgs, ros-melodic-diagnostic-updater, ros-melodic-geometry-msgs, ros-melodic-rospy, ros-melodic-sensor-msgs
+Description: A ROS driver for the Emlid Reach RS GNSS RTK receiver.
+ It is based on the nmea_navsat_driver package.
