@@ -1,6 +1,6 @@
 Source: ros-melodic-reach-rs-driver
 Section: misc
-Priority: extra
+Priority: optional
 Maintainer: Jacob Seibert <jacob.seibert@enway.ai>
 Build-Depends: debhelper (>= 9.0.0), ros-melodic-catkin,
  ros-melodic-diagnostic-msgs, ros-melodic-diagnostic-updater,
