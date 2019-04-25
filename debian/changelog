@@ -1,3 +1,9 @@
+ros-melodic-reach-rs-driver (0.0.6-1bionic) unstable; urgency=medium
+
+  * April build
+
+ -- nick black <dankamongmen@gmail.com>  Thu, 25 Apr 2019 05:28:24 -0400
+
 ros-melodic-reach-rs-driver (0.0.5) unstable; urgency=medium
 
   * Non-maintainer upload for 0.0.5.
