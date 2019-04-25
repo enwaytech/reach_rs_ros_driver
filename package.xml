@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package format="2">
   <name>reach_rs_driver</name>
-  <version>0.0.1</version>
+  <version>0.0.5</version>
   <description>A ROS driver for the Emlid Reach RS GNSS RTK receiver. 
   It is based on the nmea_navsat_driver package.</description>
 
