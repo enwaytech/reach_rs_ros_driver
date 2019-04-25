@@ -1,4 +1,10 @@
-ros-melodic-reach-rs-driver (0.0.6-1bionic) unstable; urgency=medium
+ros-melodic-reach-rs-driver (0.0.7-1bionic) UNRELEASED; urgency=medium
+
+  * Switch to Ubuntu-style bionic from Debian-style unstable
+
+ -- nick black <dankamongmen@gmail.com>  Thu, 25 Apr 2019 07:01:42 -0400
+
+ros-melodic-reach-rs-driver (0.0.6-1bionic) bionic; urgency=medium
 
   * April build
 
