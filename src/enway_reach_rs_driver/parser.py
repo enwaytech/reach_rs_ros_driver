@@ -71,11 +71,12 @@ def convert_time(nmea_utc):
         hours = int(nmea_utc[0:2])
         minutes = int(nmea_utc[2:4])
         seconds = int(nmea_utc[4:6])
+        seconds_tenths = float(nmea_utc[6:8]) if '.' in nmea_utc else 0
         utc_list[3] = hours
         utc_list[4] = minutes
         utc_list[5] = seconds
         unix_time = calendar.timegm(tuple(utc_list))
-        return unix_time
+        return unix_time + seconds_tenths
 
 
 def convert_status_flag(status_flag):
