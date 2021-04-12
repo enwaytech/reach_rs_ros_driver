@@ -124,7 +124,7 @@ class ReachRsDriver(object):
                 return
             except socket.timeout:
                 self.connection_status = 'connect timeout'
-            except socket.error,  msg:
+            except socket.error as msg:
                 self.connection_status = 'connect error ({0})'.format(msg)
             
         exit()
