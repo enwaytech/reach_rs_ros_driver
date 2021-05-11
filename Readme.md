@@ -6,7 +6,7 @@ In comparison to similar packages (such as [nmea_tcp_driver](https://github.com/
 
 - automatic reconnection behaviour after connection is lost
 - use the diagnostics system of ROS to provide status information
-- ability to specifiy a covariance matrix for the position (especially useful when fusing sensor data)
+- ability to specify a covariance matrix for the position (especially useful when fusing sensor data)
 
 # Configuration of the Reach RS
 
